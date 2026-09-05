@@ -1,12 +1,17 @@
 let currentInput = '';
 let expression = '';
 
-const expressionDisplay = document.getElementById('expression');
-const resultDisplay = document.getElementById('result');
+function getDisplays() {
+  return {
+    expressionDisplay: document.getElementById('expression'),
+    resultDisplay: document.getElementById('result')
+  };
+}
 
 function updateDisplay() {
-  expressionDisplay.textContent = expression;
-  resultDisplay.textContent = currentInput || '0';
+  const { expressionDisplay, resultDisplay } = getDisplays();
+  if (expressionDisplay) expressionDisplay.textContent = expression;
+  if (resultDisplay) resultDisplay.textContent = currentInput || '0';
 }
 
 function appendNumber(num) {
@@ -22,7 +27,7 @@ function appendNumber(num) {
 function appendOperator(op) {
   if (currentInput === '' && expression === '') return;
   if (currentInput === '' && expression !== '') {
-    expression = expression.slice(0, -1) + op;
+    expression = expression.trim().slice(0, -1) + ' ' + op + ' ';
   } else {
     expression += currentInput + ' ' + op + ' ';
     currentInput = '';
@@ -37,7 +42,21 @@ function clearDisplay() {
 }
 
 function deleteLast() {
-  currentInput = currentInput.slice(0, -1);
+  if (currentInput.length > 0) {
+    currentInput = currentInput.slice(0, -1);
+  } else if (expression.length > 0) {
+    let trimmed = expression.trim();
+    trimmed = trimmed.slice(0, -1).trim();
+    
+    const lastSpace = trimmed.lastIndexOf(' ');
+    if (lastSpace !== -1) {
+      currentInput = trimmed.slice(lastSpace + 1);
+      expression = trimmed.slice(0, lastSpace + 1);
+    } else {
+      currentInput = trimmed;
+      expression = '';
+    }
+  }
   updateDisplay();
 }
 
@@ -46,6 +65,8 @@ function calculate() {
   
   let fullExpression = expression + currentInput;
   if (!fullExpression) return;
+
+  const { resultDisplay } = getDisplays();
 
   try {
     const sanitizedExpression = fullExpression
@@ -56,7 +77,7 @@ function calculate() {
     const evalResult = Function(`'use strict'; return (${sanitizedExpression})`)();
     
     if (!isFinite(evalResult)) {
-      resultDisplay.textContent = 'Error';
+      if (resultDisplay) resultDisplay.textContent = 'Error';
       currentInput = '';
       expression = '';
       return;
@@ -66,7 +87,7 @@ function calculate() {
     expression = '';
     updateDisplay();
   } catch (error) {
-    resultDisplay.textContent = 'Error';
+    if (resultDisplay) resultDisplay.textContent = 'Error';
     currentInput = '';
     expression = '';
   }
