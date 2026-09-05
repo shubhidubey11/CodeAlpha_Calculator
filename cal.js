@@ -26,8 +26,11 @@ function appendNumber(num) {
 
 function appendOperator(op) {
   if (currentInput === '' && expression === '') return;
+  
   if (currentInput === '' && expression !== '') {
-    expression = expression.trim().slice(0, -1) + ' ' + op + ' ';
+    // Switch last operator if clicked back-to-back
+    expression = expression.trimEnd();
+    expression = expression.slice(0, -1) + op + ' ';
   } else {
     expression += currentInput + ' ' + op + ' ';
     currentInput = '';
@@ -43,12 +46,18 @@ function clearDisplay() {
 
 function deleteLast() {
   if (currentInput.length > 0) {
+    // Step 1: Remove single digit/character from current input
     currentInput = currentInput.slice(0, -1);
   } else if (expression.length > 0) {
-    let trimmed = expression.trim();
-    trimmed = trimmed.slice(0, -1).trim();
+    // Step 2: If currentInput is empty, backspace into the expression
+    let trimmed = expression.trimEnd();
     
+    // Remove the trailing operator or character
+    trimmed = trimmed.slice(0, -1).trimEnd();
+    
+    // Check if there is a previous operator remaining
     const lastSpace = trimmed.lastIndexOf(' ');
+    
     if (lastSpace !== -1) {
       currentInput = trimmed.slice(lastSpace + 1);
       expression = trimmed.slice(0, lastSpace + 1);
